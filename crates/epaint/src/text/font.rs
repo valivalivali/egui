@@ -6,6 +6,7 @@ use emath::{GuiRounding as _, OrderedFloat, Vec2, vec2};
 use self_cell::self_cell;
 use skrifa::{GlyphId, MetadataProvider as _};
 use alloc::collections::BTreeMap;
+#[cfg(feature = "vello")]
 use vello_cpu::{color, kurbo};
 
 use crate::{
@@ -219,6 +220,7 @@ impl FontCell {
         scale / units_per_em
     }
 
+    #[cfg(feature = "vello")]
     fn allocate_glyph_uncached(
         &mut self,
         atlas: &mut TextureAtlas,
@@ -314,13 +316,29 @@ impl FontCell {
 
         Some(GlyphAllocation { uv_rect })
     }
+
+    #[cfg(not(feature = "vello"))]
+    fn allocate_glyph_uncached(
+        &mut self,
+        _atlas: &mut TextureAtlas,
+        _metrics: &StyledMetrics,
+        _glyph_id: GlyphId,
+        _bin: SubpixelBin,
+        _location: skrifa::instance::LocationRef<'_>,
+        _hinting_target: skrifa::outline::Target,
+    ) -> Option<GlyphAllocation> {
+        // Vello disabled — glyph rasterization not available
+        None
+    }
 }
 
+#[cfg(feature = "vello")]
 struct VelloPen<'a> {
     path: &'a mut kurbo::BezPath,
     x_offset: f64,
 }
 
+#[cfg(feature = "vello")]
 impl skrifa::outline::OutlinePen for VelloPen<'_> {
     fn move_to(&mut self, x: f32, y: f32) {
         self.path.move_to((x as f64 + self.x_offset, -y as f64));

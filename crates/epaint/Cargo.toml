@@ -24,7 +24,11 @@ rustdoc-args = ["--generate-link-to-definition"]
 
 
 [features]
-default = ["default_fonts"]
+default = ["default_fonts", "vello"]
+
+## Enable vello-based font rasterization.
+## Disable for no_std targets where vello's LLVM codegen is problematic.
+vello = ["dep:vello_cpu", "dep:vello_common"]
 
 ## [`bytemuck`](https://docs.rs/bytemuck) enables you to cast [`Vertex`] to `&[u8]`.
 bytemuck = ["dep:bytemuck", "emath/bytemuck", "ecolor/bytemuck"]
@@ -81,14 +85,14 @@ smallvec.workspace = true
 spin.workspace = true
 unicode-general-category.workspace = true
 unicode-segmentation.workspace = true
-vello_cpu.workspace = true
+vello_cpu = { workspace = true, optional = true }
 # Direct deps for feature unification (libm)
 color.workspace = true
 fearless_simd_02.workspace = true
 fearless_simd_03.workspace = true
 kurbo.workspace = true
 read-fonts.workspace = true
-vello_common.workspace = true
+vello_common = { workspace = true, optional = true }
 
 #! ### Optional dependencies
 bytemuck = { workspace = true, optional = true, features = ["derive"] }
