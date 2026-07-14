@@ -78,19 +78,25 @@ mod id_salt_source {
     use super::{AsIdSalt, IdSalt};
     use epaint::mutex::RwLock;
     use hashbrown::HashMap;
+    use alloc::string::String;
+    use alloc::format;
     use spin::Once;
 
-    static SOURCE_MAP: LazyLock<RwLock<IntMap<IdSalt, String>>> = spin::Once::new(RwLock::default);
+    static SOURCE_MAP: Once<RwLock<HashMap<IdSalt, String>>> = Once::new();
+
+    fn source_map() -> &'static RwLock<HashMap<IdSalt, String>> {
+        SOURCE_MAP.call_once(|| RwLock::new(HashMap::new()))
+    }
 
     pub(super) fn maybe_insert(id_salt: IdSalt, source: &impl AsIdSalt) {
-        if !SOURCE_MAP.read().contains_key(&id_salt) {
+        if !source_map().read().contains_key(&id_salt) {
             let formatted = format!("{source:?}");
-            SOURCE_MAP.write().insert(id_salt, formatted);
+            source_map().write().insert(id_salt, formatted);
         }
     }
 
     pub(super) fn get(id_salt: IdSalt) -> Option<String> {
-        SOURCE_MAP.read().get(&id_salt).cloned()
+        source_map().read().get(&id_salt).cloned()
     }
 }
 

@@ -173,33 +173,39 @@ pub type IdMap<V> = hashbrown::HashMap<Id, V, nohash_hasher::BuildNoHashHasher<I
 mod id_source {
     use super::{AsId, AsIdSalt, Id, IdMap};
     use epaint::mutex::RwLock;
+    use alloc::string::String;
+    use alloc::format;
     use spin::Once;
 
-    static SOURCE_MAP: LazyLock<RwLock<IdMap<String>>> = spin::Once::new(RwLock::default);
+    static SOURCE_MAP: Once<RwLock<IdMap<String>>> = Once::new();
+
+    fn source_map() -> &'static RwLock<IdMap<String>> {
+        SOURCE_MAP.call_once(|| RwLock::new(IdMap::default()))
+    }
 
     pub(super) fn insert_root(id: Id, source: &impl AsId) {
-        if SOURCE_MAP.read().contains_key(&id) {
+        if source_map().read().contains_key(&id) {
             return;
         }
         // Format outside the lock since `{source:?}` may itself recurse into [`Id`]'s `Debug` impl.
         let formatted = format!("Id::new({source:?})");
-        SOURCE_MAP.write().insert(id, formatted);
+        source_map().write().insert(id, formatted);
     }
 
     pub(super) fn insert_child(id: Id, parent: Id, salt: &impl AsIdSalt) {
-        if SOURCE_MAP.read().contains_key(&id) {
+        if source_map().read().contains_key(&id) {
             return;
         }
         // Look up parent's repr and drop the read guard before formatting,
         // since `{parent:?}` and `{salt:?}` may themselves recurse into [`Id`]'s `Debug` impl.
-        let cached_parent_repr = SOURCE_MAP.read().get(&parent).cloned();
+        let cached_parent_repr = source_map().read().get(&parent).cloned();
         let parent_repr = cached_parent_repr.unwrap_or_else(|| format!("{parent:?}"));
         let formatted = format!("{parent_repr}.with({salt:?})");
-        SOURCE_MAP.write().insert(id, formatted);
+        source_map().write().insert(id, formatted);
     }
 
     pub(super) fn get(id: Id) -> Option<String> {
-        SOURCE_MAP.read().get(&id).cloned()
+        source_map().read().get(&id).cloned()
     }
 }
 
