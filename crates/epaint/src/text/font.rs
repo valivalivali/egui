@@ -8,6 +8,7 @@ use skrifa::{GlyphId, MetadataProvider as _};
 use alloc::collections::BTreeMap;
 #[cfg(feature = "vello")]
 use vello_cpu::{color, kurbo};
+use crate::emath::FloatExt32 as _;
 
 use crate::{
     TextOptions, TextureAtlas,
@@ -320,15 +321,305 @@ impl FontCell {
     #[cfg(not(feature = "vello"))]
     fn allocate_glyph_uncached(
         &mut self,
-        _atlas: &mut TextureAtlas,
-        _metrics: &StyledMetrics,
-        _glyph_id: GlyphId,
-        _bin: SubpixelBin,
-        _location: skrifa::instance::LocationRef<'_>,
-        _hinting_target: skrifa::outline::Target,
+        atlas: &mut TextureAtlas,
+        metrics: &StyledMetrics,
+        glyph_id: GlyphId,
+        bin: SubpixelBin,
+        location: skrifa::instance::LocationRef<'_>,
+        hinting_target: skrifa::outline::Target,
     ) -> Option<GlyphAllocation> {
-        // Vello disabled — glyph rasterization not available
-        None
+        debug_assert!(
+            glyph_id != skrifa::GlyphId::NOTDEF,
+            "Can't allocate glyph for id 0"
+        );
+
+        let x_offset = bin.as_float() as f32;
+        let mut pen = ScanlinePen::new(x_offset);
+
+        self.with_dependent_mut(|_, font_data| {
+            let outline = font_data.outline_glyphs.get(glyph_id)?;
+
+            if let Some(hinting_instance) = &mut font_data.hinting_instance {
+                let size = skrifa::instance::Size::new(metrics.scale);
+                if hinting_instance.size() != size
+                    || hinting_instance.location().coords() != location.coords()
+                    || hinting_instance.target() != hinting_target
+                {
+                    hinting_instance
+                        .reconfigure(&font_data.outline_glyphs, size, location, hinting_target)
+                        .ok()?;
+                }
+                let draw_settings = skrifa::outline::DrawSettings::hinted(hinting_instance, false);
+                outline.draw(draw_settings, &mut pen).ok()?;
+            } else {
+                let draw_settings = skrifa::outline::DrawSettings::unhinted(
+                    skrifa::instance::Size::new(metrics.scale),
+                    location,
+                );
+                outline.draw(draw_settings, &mut pen).ok()?;
+            }
+
+            Some(())
+        })?;
+
+        pen.finalize();
+
+        let (min_x, min_y, max_x, max_y) = pen.bbox();
+        let width = (max_x - min_x).ceil() as u16;
+        let height = (max_y - min_y).ceil() as u16;
+
+        let uv_rect = if width == 0 || height == 0 {
+            UvRect::default()
+        } else {
+            let coverage = pen.rasterize(min_x, min_y, width as usize, height as usize);
+
+            let glyph_pos = {
+                let color_transfer_function = atlas.options().color_transfer_function;
+                let (glyph_pos, image) = atlas.allocate((width as usize, height as usize));
+                for y in 0..height as usize {
+                    for x in 0..width as usize {
+                        let cov = coverage[x + y * width as usize];
+                        if cov > 0.0 {
+                            image[(x + glyph_pos.0, y + glyph_pos.1)] =
+                                color_transfer_function.color_from_coverage(cov);
+                        }
+                    }
+                }
+                glyph_pos
+            };
+            let offset_in_pixels = vec2(min_x, min_y);
+            let offset =
+                offset_in_pixels / metrics.pixels_per_point + metrics.y_offset_in_points * Vec2::Y;
+            UvRect {
+                offset,
+                size: vec2(width as f32, height as f32) / metrics.pixels_per_point,
+                min: [glyph_pos.0 as u16, glyph_pos.1 as u16],
+                max: [
+                    (glyph_pos.0 + width as usize) as u16,
+                    (glyph_pos.1 + height as usize) as u16,
+                ],
+            }
+        };
+
+        Some(GlyphAllocation { uv_rect })
+    }
+}
+
+#[cfg(not(feature = "vello"))]
+struct ScanlinePen {
+    x_offset: f32,
+    contours: Vec<Vec<(f32, f32)>>,
+    current: Vec<(f32, f32)>,
+    start: (f32, f32),
+}
+
+#[cfg(not(feature = "vello"))]
+impl ScanlinePen {
+    fn new(x_offset: f32) -> Self {
+        Self {
+            x_offset,
+            contours: Vec::new(),
+            current: Vec::new(),
+            start: (0.0, 0.0),
+        }
+    }
+
+    fn finalize(&mut self) {
+        if !self.current.is_empty() {
+            let mut c = core::mem::take(&mut self.current);
+            // Ensure contour is closed
+            if c[0] != *c.last().unwrap() {
+                c.push(c[0]);
+            }
+            self.contours.push(c);
+        }
+    }
+
+    fn bbox(&self) -> (f32, f32, f32, f32) {
+        let mut min_x = f32::MAX;
+        let mut min_y = f32::MAX;
+        let mut max_x = f32::MIN;
+        let mut max_y = f32::MIN;
+        for contour in &self.contours {
+            for &(x, y) in contour {
+                min_x = min_x.min(x);
+                min_y = min_y.min(y);
+                max_x = max_x.max(x);
+                max_y = max_y.max(y);
+            }
+        }
+        if min_x > max_x {
+            return (0.0, 0.0, 0.0, 0.0);
+        }
+        (min_x, min_y, max_x, max_y)
+    }
+
+    fn rasterize(&self, min_x: f32, min_y: f32, w: usize, h: usize) -> Vec<f32> {
+        // 4x4 supersampling for anti-aliasing
+        const SS: usize = 4;
+        const SS_F: f32 = SS as f32;
+        const SS_SQ: usize = SS * SS;
+
+        let mut coverage = vec![0u16; w * h];
+
+        // Flatten all contours into edges, shifted so min_x/min_y maps to 0,0
+        let mut edges: Vec<(f32, f32, f32, f32)> = Vec::new();
+        for contour in &self.contours {
+            if contour.len() < 2 {
+                continue;
+            }
+            for i in 0..contour.len() - 1 {
+                let (x0, y0) = contour[i];
+                let (x1, y1) = contour[i + 1];
+                let x0 = x0 - min_x;
+                let y0 = y0 - min_y;
+                let x1 = x1 - min_x;
+                let y1 = y1 - min_y;
+                if y0 != y1 {
+                    edges.push((x0, y0, x1, y1));
+                }
+            }
+        }
+
+        if edges.is_empty() {
+            return vec![0.0; w * h];
+        }
+
+        // For each supersampled row, do scanline fill
+        let inv_ss = 1.0 / SS_F;
+
+        for sy in 0..SS {
+            let y_sub = sy as f32 + 0.5;
+            // For each pixel row
+            for py in 0..h {
+                let scan_y = py as f32 + y_sub * inv_ss;
+
+                // Collect x-intersections at this scanline
+                let mut crossings: Vec<f32> = Vec::new();
+                for &(x0, y0, x1, y1) in &edges {
+                    let (ymin, ymax) = if y0 < y1 { (y0, y1) } else { (y1, y0) };
+                    if scan_y >= ymin && scan_y < ymax {
+                        let t = (scan_y - y0) / (y1 - y0);
+                        let x = x0 + t * (x1 - x0);
+                        crossings.push(x);
+                    }
+                }
+
+                if crossings.len() < 2 {
+                    continue;
+                }
+
+                crossings.sort_by(|a, b| a.partial_cmp(b).unwrap_or(core::cmp::Ordering::Equal));
+
+                // Fill between pairs of crossings (even-odd fill rule)
+                let mut i = 0;
+                while i + 1 < crossings.len() {
+                    let x_start = crossings[i].max(0.0);
+                    let x_end = crossings[i + 1].min(w as f32);
+                    if x_start < x_end {
+                        let px_start = (x_start.floor() as usize).min(w);
+                        let px_end = (x_end.ceil() as usize).min(w);
+                        for px in px_start..px_end {
+                            let px_f = px as f32;
+                            let mut count = 0u16;
+                            for sx in 0..SS {
+                                let sample_x = px_f + (sx as f32 + 0.5) * inv_ss;
+                                if sample_x >= x_start && sample_x < x_end {
+                                    count += 1;
+                                }
+                            }
+                            coverage[px + py * w] += count;
+                        }
+                    }
+                    i += 2;
+                }
+            }
+        }
+
+        // Convert to 0..1 coverage
+        let inv_max = 1.0 / SS_SQ as f32;
+        coverage.iter().map(|&c| c as f32 * inv_max).collect()
+    }
+}
+
+#[cfg(not(feature = "vello"))]
+impl skrifa::outline::OutlinePen for ScanlinePen {
+    fn move_to(&mut self, x: f32, y: f32) {
+        // Close previous contour
+        if !self.current.is_empty() {
+            let mut c = core::mem::take(&mut self.current);
+            if c[0] != *c.last().unwrap() {
+                c.push(c[0]);
+            }
+            self.contours.push(c);
+        }
+        let px = x + self.x_offset;
+        let py = -y; // Flip Y (same as VelloPen)
+        self.start = (px, py);
+        self.current.push((px, py));
+    }
+
+    fn line_to(&mut self, x: f32, y: f32) {
+        let px = x + self.x_offset;
+        let py = -y;
+        self.current.push((px, py));
+    }
+
+    fn quad_to(&mut self, cx0: f32, cy0: f32, x: f32, y: f32) {
+        // Flatten quadratic bezier into line segments
+        let (px0, py0) = *self.current.last().expect("quad_to without move_to");
+        let cx = cx0 + self.x_offset;
+        let cy = -cy0;
+        let px1 = x + self.x_offset;
+        let py1 = -y;
+
+        let steps = 8;
+        for i in 1..=steps {
+            let t = i as f32 / steps as f32;
+            let mt = 1.0 - t;
+            let x = mt * mt * px0 + 2.0 * mt * t * cx + t * t * px1;
+            let y = mt * mt * py0 + 2.0 * mt * t * cy + t * t * py1;
+            self.current.push((x, y));
+        }
+    }
+
+    fn curve_to(&mut self, cx0: f32, cy0: f32, cx1: f32, cy1: f32, x: f32, y: f32) {
+        // Flatten cubic bezier into line segments
+        let (px0, py0) = *self.current.last().expect("curve_to without move_to");
+        let c0x = cx0 + self.x_offset;
+        let c0y = -cy0;
+        let c1x = cx1 + self.x_offset;
+        let c1y = -cy1;
+        let px1 = x + self.x_offset;
+        let py1 = -y;
+
+        let steps = 12;
+        for i in 1..=steps {
+            let t = i as f32 / steps as f32;
+            let mt = 1.0 - t;
+            let x = mt * mt * mt * px0
+                + 3.0 * mt * mt * t * c0x
+                + 3.0 * mt * t * t * c1x
+                + t * t * t * px1;
+            let y = mt * mt * mt * py0
+                + 3.0 * mt * mt * t * c0y
+                + 3.0 * mt * t * t * c1y
+                + t * t * t * py1;
+            self.current.push((x, y));
+        }
+    }
+
+    fn close(&mut self) {
+        if !self.current.is_empty() {
+            // Close back to start
+            let start = self.start;
+            let last = *self.current.last().unwrap();
+            if last != start {
+                self.current.push(start);
+            }
+            let mut c = core::mem::take(&mut self.current);
+            self.contours.push(c);
+        }
     }
 }
 
