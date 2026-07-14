@@ -15,6 +15,7 @@
 //!
 //! Add your [`crate::Window`]:s after any top-level panels.
 
+use crate::prelude::*;
 use emath::GuiRounding as _;
 
 use crate::{

@@ -1,5 +1,6 @@
 // WARNING: the code in here is horrible. It is a behemoth that needs breaking up into simpler parts.
 
+use crate::prelude::*;
 use emath::GuiRounding as _;
 use epaint::CornerRadiusF32;
 
@@ -909,7 +910,7 @@ impl SideResponse {
     }
 }
 
-impl std::ops::BitAnd for SideResponse {
+impl core::ops::BitAnd for SideResponse {
     type Output = Self;
 
     fn bitand(self, rhs: Self) -> Self::Output {
@@ -920,7 +921,7 @@ impl std::ops::BitAnd for SideResponse {
     }
 }
 
-impl std::ops::BitOrAssign for SideResponse {
+impl core::ops::BitOrAssign for SideResponse {
     fn bitor_assign(&mut self, rhs: Self) {
         *self = Self {
             hover: self.hover || rhs.hover,

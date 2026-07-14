@@ -8,6 +8,7 @@
 //!
 //! See [`MenuBar`] for an example.
 
+use crate::prelude::*;
 use crate::style::StyleModifier;
 use crate::{
     Button, Color32, Context, Frame, Id, InnerResponse, IntoAtoms, Layout, PointerButton, Popup,

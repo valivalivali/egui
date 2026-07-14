@@ -4,6 +4,7 @@
 //! The plugin is registered with the [`Context`] using [`Context::add_plugin`]
 //! to get callbacks on certain events ([`Plugin::on_begin_pass`], [`Plugin::on_end_pass`]).
 
+use crate::prelude::*;
 use crate::{
     Align, Align2, Color32, Context, FontFamily, FontId, Plugin, Rect, Shape, Ui, Vec2, WidgetText,
     text,
@@ -26,7 +27,7 @@ pub fn print(ctx: &Context, text: impl Into<WidgetText>) {
         return;
     }
 
-    let location = std::panic::Location::caller();
+    let location = core::panic::Location::caller();
     let location = format!("{}:{}", location.file(), location.line());
 
     let plugin = ctx.plugin::<DebugTextPlugin>();
@@ -58,7 +59,7 @@ impl Plugin for DebugTextPlugin {
     }
 
     fn on_end_pass(&mut self, ui: &mut Ui) {
-        let entries = std::mem::take(&mut self.entries);
+        let entries = core::mem::take(&mut self.entries);
         Self::paint_entries(ui, entries);
     }
 }

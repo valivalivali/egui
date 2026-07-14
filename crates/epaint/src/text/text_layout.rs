@@ -1,7 +1,9 @@
 #![expect(clippy::unwrap_used)] // TODO(emilk): remove unwraps
 
-use std::sync::Arc;
-use std::{iter, ops::Range};
+use crate::prelude::*;
+use alloc::sync::Arc;
+use core::iter;
+use core::ops::Range;
 
 use emath::{Align, GuiRounding as _, NumExt as _, Pos2, Rect, Vec2, pos2, vec2};
 
@@ -524,7 +526,7 @@ fn layout_section(
 /// Iterator that either splits on `'\n'` or yields the whole string once.
 /// Avoids `Box<dyn Iterator>` and `Vec<&str>` allocation.
 enum SplitOrWhole<'a> {
-    Split(std::str::Split<'a, char>),
+    Split(core::str::Split<'a, char>),
     Whole(iter::Once<&'a str>),
 }
 
@@ -572,7 +574,7 @@ fn calculate_intrinsic_size(
             .glyphs
             .iter()
             .map(|g| g.line_height)
-            .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+            .max_by(|a, b| a.partial_cmp(b).unwrap_or(core::cmp::Ordering::Equal))
             .unwrap_or(paragraph.empty_paragraph_height);
         if idx == 0 {
             height = f32::max(height, job.first_row_min_height);
@@ -1438,7 +1440,7 @@ fn shape_text(
 
 #[cfg(test)]
 mod tests {
-    use std::iter;
+    use core::iter;
 
     use super::{super::*, *};
     use crate::text::cursor::CCursor;

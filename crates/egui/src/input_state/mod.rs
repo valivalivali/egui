@@ -1,3 +1,4 @@
+use crate::prelude::*;
 mod touch_state;
 mod wheel_state;
 
@@ -13,10 +14,9 @@ use crate::{
     },
     input_state::wheel_state::WheelState,
 };
-use std::{
-    collections::{BTreeMap, HashSet},
-    time::Duration,
-};
+use alloc::collections::BTreeMap;
+use hashbrown::HashSet;
+use core::time::Duration;
 
 pub use crate::Key;
 pub use touch_state::MultiTouchInfo;

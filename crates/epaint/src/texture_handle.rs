@@ -1,4 +1,5 @@
-use std::sync::Arc;
+use crate::prelude::*;
+use alloc::sync::Arc;
 
 use crate::{
     ImageData, ImageDelta, TextureId, TextureManager, emath::NumExt as _, mutex::RwLock,
@@ -47,9 +48,9 @@ impl PartialEq for TextureHandle {
 
 impl Eq for TextureHandle {}
 
-impl std::hash::Hash for TextureHandle {
+impl core::hash::Hash for TextureHandle {
     #[inline]
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.id.hash(state);
     }
 }

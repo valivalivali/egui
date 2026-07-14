@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use crate::{Color32, Pos2, Rect, Shape, Stroke, Vec2};
 
 /// How to paint a circle.

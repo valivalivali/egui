@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use ecolor::Color32;
 use emath::{Rect, remap_clamp};
 
@@ -202,7 +203,7 @@ impl TextureAtlas {
     pub fn take_delta(&mut self) -> Option<ImageDelta> {
         let texture_options = Self::texture_options();
 
-        let dirty = std::mem::replace(&mut self.dirty, Rectu::NOTHING);
+        let dirty = core::mem::replace(&mut self.dirty, Rectu::NOTHING);
         if dirty == Rectu::NOTHING {
             None
         } else if dirty == Rectu::EVERYTHING {

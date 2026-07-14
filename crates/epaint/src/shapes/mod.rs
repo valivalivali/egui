@@ -1,3 +1,4 @@
+use crate::prelude::*;
 mod bezier_shape;
 mod circle_shape;
 mod ellipse_shape;

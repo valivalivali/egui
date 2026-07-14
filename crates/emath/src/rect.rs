@@ -1,7 +1,8 @@
-use std::fmt;
+use crate::{FloatExt32 as _, FloatExt64 as _};
+use core::fmt;
 
 use crate::{Div, Mul, NumExt as _, Pos2, Rangef, Rot2, Vec2, fast_midpoint, lerp, pos2, vec2};
-use std::ops::{BitOr, BitOrAssign};
+use core::ops::{BitOr, BitOrAssign};
 
 /// A rectangular region of space.
 ///
@@ -727,7 +728,7 @@ impl Rect {
             let mut t1 = (self.max[i] - self.center()[i]) * inv_d;
 
             if inv_d < 0.0 {
-                std::mem::swap(&mut t0, &mut t1);
+                core::mem::swap(&mut t0, &mut t1);
             }
 
             tmin = tmin.max(t0);

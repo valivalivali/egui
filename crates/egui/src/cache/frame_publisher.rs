@@ -1,11 +1,12 @@
-use std::hash::Hash;
+use crate::prelude::*;
+use core::hash::Hash;
 
 use super::CacheTrait;
 
 /// Stores a key:value pair for the duration of this frame and the next.
 pub struct FramePublisher<Key: Eq + Hash, Value> {
     generation: u32,
-    cache: ahash::HashMap<Key, (u32, Value)>,
+    cache: hashbrown::HashMap<Key, (u32, Value)>,
 }
 
 impl<Key: Eq + Hash, Value> Default for FramePublisher<Key, Value> {

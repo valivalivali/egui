@@ -1,5 +1,6 @@
 //! Color picker widgets.
 
+use crate::prelude::*;
 use crate::util::fixed_cache::FixedCache;
 use crate::{
     Context, DragValue, Id, Painter, Popup, PopupCloseBehavior, Response, Sense, Ui, Widget as _,

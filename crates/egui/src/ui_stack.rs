@@ -1,5 +1,7 @@
-use std::sync::Arc;
-use std::{any::Any, iter::FusedIterator};
+use crate::prelude::*;
+use alloc::sync::Arc;
+use core::any::Any;
+use core::iter::FusedIterator;
 
 use crate::widget_style::Classes;
 use epaint::Color32;
@@ -158,7 +160,7 @@ impl UiStackInfo {
 ///
 /// All tagging is transient, and will only live as long as the parent [`crate::Ui`], i.e. within a single render frame.
 #[derive(Clone, Default, Debug)]
-pub struct UiTags(pub ahash::HashMap<String, Option<Arc<dyn Any + Send + Sync + 'static>>>);
+pub struct UiTags(pub hashbrown::HashMap<String, Option<Arc<dyn Any + Send + Sync + 'static>>>);
 
 impl UiTags {
     #[inline]

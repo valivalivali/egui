@@ -1,4 +1,5 @@
 /// this is a `u64` as values of this kind can always be obtained by hashing
+use crate::prelude::*;
 #[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub struct TouchDeviceId(pub u64);

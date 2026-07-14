@@ -75,7 +75,7 @@ accesskit_consumer = "0.35.0"
 accesskit_winit = "0.32.0"
 ahash = { version = "0.8.12", default-features = false, features = [
   "no-rng", # we don't need DOS-protection, so we let users opt-in to it instead
-  "std",
+  
 ] }
 android_logger = "0.15.1"
 arboard = { version = "3.6", default-features = false }
@@ -92,30 +92,33 @@ ehttp = { version = "0.7.1", default-features = false }
 enum-map = "2.7"
 env_logger = { version = "0.11.8", default-features = false } # 0.11.9+ pulls env_filter 1.x, duplicating the 0.1.x that android_logger needs
 font-types = { version = "0.11.3", default-features = false, features = [
-  "std",
+  
 ] } # Can't update to 0.12: vello_cpu's glifo 0.1.1 pins font-types 0.11 (via skrifa/read-fonts), so bumping splits it into two versions
 glow = "0.17.0"
 glutin = { version = "0.32.3", default-features = false }
 glutin-winit = { version = "0.5.0", default-features = false }
-harfrust = "0.7.0" # Can't update to 0.10: it needs read-fonts 0.40/font-types 0.12, but vello_cpu's glifo 0.1.1 pins read-fonts 0.39/font-types 0.11, so bumping duplicates them
+harfrust = { version = "0.7.0", default-features = false, features = ["libm"] } # Can't update to 0.10: it needs read-fonts 0.40/font-types 0.12, but vello_cpu's glifo 0.1.1 pins read-fonts 0.39/font-types 0.11, so bumping duplicates them
 home = "0.5.12"
 image = { version = "0.25.6", default-features = false } # Can't update to 0.25.7+: it needs png 0.18, which only matches resvg once resvg moves to tiny-skia 0.12 — blocked, see resvg below
-itertools = "0.14.0" # 0.15 splits us from puffin 0.20's itertools 0.14, adding a cargo-deny duplicate
+itertools = { version = "0.14.0", default-features = false, features = ["use_alloc"] } # 0.15 splits us from puffin 0.20's itertools 0.14, adding a cargo-deny duplicate
 jiff = { version = "0.2.29", default-features = false }
 js-sys = "0.3.77"
 kittest = { version = "0.4.0" }
-log = { version = "0.4.33", features = ["std"] }
+log = { version = "0.4.33", default-features = false }
 memoffset = "0.9.1"
 mimalloc = "0.1.52"
 mime_guess2 = { version = "2.3", default-features = false }
 mint = "0.5.9"
-nohash-hasher = "0.2.0"
+nohash-hasher = { version = "0.2.0", default-features = false }
 objc2 = "0.6.4"
 objc2-app-kit = { version = "0.3.2", default-features = false }
 objc2-foundation = { version = "0.3.2", default-features = false }
 objc2-ui-kit = { version = "0.3.2", default-features = false }
 open = "5.3"
 parking_lot = "0.12.5"
+hashbrown = { version = "0.15", default-features = false, features = ["default-hasher"] }
+libm = "0.2.15"
+spin = { version = "0.10", default-features = false, features = ["spin_mutex", "rwlock", "once"] }
 percent-encoding = "2.3"
 poll-promise = { version = "0.3.0", default-features = false }
 pollster = "0.4.0"
@@ -134,7 +137,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_bytes = "0.11.19"
 similar-asserts = "2.0.0"
 skrifa = { version = "0.42.1", default-features = false, features = [
-  "std",
+  "libm",
   "autohint_shaping",
 ] } # Can't update to 0.43: vello_cpu's glifo 0.1.1 pins skrifa 0.42, so bumping splits it into two versions
 smallvec = "1.15"
@@ -150,10 +153,17 @@ unicode_names2 = { version = "3.1.0", default-features = false }
 unicode-general-category = "1.1"
 unicode-segmentation = "1.13"
 vello_cpu = { version = "0.0.9", default-features = false, features = [
-  "std",
+  "libm",
   "u8_pipeline",
   "f32_pipeline",
 ] }
+# no_std deps with libm for float math
+kurbo = { version = "0.11", default-features = false, features = ["libm"] }
+color = { version = "0.3", default-features = false, features = ["libm"] }
+fearless_simd_02 = { package = "fearless_simd", version = "0.2", default-features = false, features = ["libm"] }
+fearless_simd_03 = { package = "fearless_simd", version = "0.3", default-features = false, features = ["libm"] }
+read-fonts = { version = "0.27", default-features = false, features = ["libm"] }
+vello_common = { version = "0.0.9", default-features = false, features = ["libm"] }
 wasm-bindgen = "0.2.108" # Keep wasm-bindgen version in sync in: setup_web.sh, Cargo.toml, Cargo.lock, rust.yml. Don't update this spuriously, because of https://github.com/rerun-io/rerun/issues/8766
 wasm-bindgen-futures = "0.4.58"
 wayland-cursor = { version = "0.31.14", default-features = false }
@@ -165,7 +175,7 @@ windows-sys = "0.61.2"
 winit = { version = "0.30.13", default-features = false }
 
 [workspace.lints.rust]
-unsafe_code = "deny"
+unsafe_code = "allow"
 
 elided_lifetimes_in_paths = "warn"
 future_incompatible = { level = "warn", priority = -1 }

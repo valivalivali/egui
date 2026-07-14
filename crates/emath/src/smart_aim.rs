@@ -1,5 +1,6 @@
 //! Find "simple" numbers is some range. Used by sliders.
 
+use crate::{FloatExt32 as _, FloatExt64 as _};
 use crate::fast_midpoint;
 
 const NUM_DECIMALS: usize = 16;

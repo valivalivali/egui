@@ -1,12 +1,13 @@
-use std::num::NonZeroU64;
+use crate::prelude::*;
+use core::num::NonZeroU64;
 
 /// Types that can be converted to an [`IdSalt`].
 ///
 /// This is all types implementing `Hash` and `Debug`,
 /// which includes things like string, integers, tuples of those, etc.
-pub trait AsIdSalt: std::hash::Hash + std::fmt::Debug {}
+pub trait AsIdSalt: core::hash::Hash + core::fmt::Debug {}
 
-impl<T: std::hash::Hash + std::fmt::Debug> AsIdSalt for T {}
+impl<T: core::hash::Hash + core::fmt::Debug> AsIdSalt for T {}
 
 /// Uniquely identifies a child widget within a parent widget.
 ///
@@ -57,8 +58,8 @@ impl IdSalt {
     }
 }
 
-impl std::fmt::Debug for IdSalt {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for IdSalt {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         #[cfg(debug_assertions)]
         if let Some(source) = id_salt_source::get(*self) {
             return write!(f, "IdSalt::new({source})");
@@ -76,10 +77,10 @@ impl std::fmt::Debug for IdSalt {
 mod id_salt_source {
     use super::{AsIdSalt, IdSalt};
     use epaint::mutex::RwLock;
-    use nohash_hasher::IntMap;
-    use std::sync::LazyLock;
+    use hashbrown::HashMap;
+    use spin::Once;
 
-    static SOURCE_MAP: LazyLock<RwLock<IntMap<IdSalt, String>>> = LazyLock::new(RwLock::default);
+    static SOURCE_MAP: LazyLock<RwLock<IntMap<IdSalt, String>>> = spin::Once::new(RwLock::default);
 
     pub(super) fn maybe_insert(id_salt: IdSalt, source: &impl AsIdSalt) {
         if !SOURCE_MAP.read().contains_key(&id_salt) {

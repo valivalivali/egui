@@ -2,6 +2,7 @@
 //! It has no frame or own size. It is potentially movable.
 //! It is the foundation for windows and popups.
 
+use crate::prelude::*;
 use emath::GuiRounding as _;
 
 use crate::{

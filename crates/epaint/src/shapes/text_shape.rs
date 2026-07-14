@@ -1,4 +1,5 @@
-use std::sync::Arc;
+use crate::prelude::*;
+use alloc::sync::Arc;
 
 use emath::{Align2, Rot2};
 
@@ -201,7 +202,7 @@ mod tests {
 
         // 90 degree rotation
         if let Shape::Text(ts) = &mut t {
-            ts.angle = std::f32::consts::PI / 2.0;
+            ts.angle = core::f32::consts::PI / 2.0;
         }
 
         let size_rot = t.visual_bounding_rect().size();

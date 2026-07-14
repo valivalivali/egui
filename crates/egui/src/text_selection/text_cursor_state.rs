@@ -1,5 +1,6 @@
 //! Text cursor changes/interaction, without modifying the text.
 
+use crate::prelude::*;
 use epaint::text::{ByteIndex, ByteRangeExt as _, CharIndex, Galley, cursor::CCursor};
 use unicode_segmentation::UnicodeSegmentation as _;
 
@@ -294,7 +295,7 @@ pub fn char_index_from_byte_index(input: &str, byte_index: ByteIndex) -> CharInd
     CharIndex(input.chars().count())
 }
 
-pub fn slice_char_range(s: &str, char_range: std::ops::Range<CharIndex>) -> &str {
+pub fn slice_char_range(s: &str, char_range: core::ops::Range<CharIndex>) -> &str {
     assert!(
         char_range.start <= char_range.end,
         "Invalid range, start must be less than end, but start = {}, end = {}",
@@ -437,7 +438,7 @@ mod test {
         let large_text = "word ".repeat(200_000); // ~1MB
         let len = large_text.chars().count();
 
-        let start = std::time::Instant::now();
+        let start = core::time::Instant::now();
 
         let next = ccursor_next_word(&large_text, CCursor::new(len - 10));
         assert!(next.index.0 <= len);

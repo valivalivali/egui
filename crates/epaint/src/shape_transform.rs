@@ -1,4 +1,5 @@
-use std::sync::Arc;
+use crate::prelude::*;
+use alloc::sync::Arc;
 
 use crate::{
     CircleShape, Color32, ColorMode, CubicBezierShape, EllipseShape, Mesh, PathShape,

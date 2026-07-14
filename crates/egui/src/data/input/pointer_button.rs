@@ -1,4 +1,5 @@
 /// Mouse button (or similar for touch input)
+use crate::prelude::*;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub enum PointerButton {

@@ -1,4 +1,8 @@
-use std::{borrow::Cow, slice::Iter, sync::Arc, time::Duration};
+use crate::prelude::*;
+use alloc::borrow::Cow;
+use core::slice::Iter;
+use alloc::sync::Arc;
+use core::time::Duration;
 
 use emath::{Align, Float as _, GuiRounding as _, NumExt as _, Rot2};
 use epaint::{
@@ -607,8 +611,8 @@ pub enum ImageSource<'a> {
     },
 }
 
-impl std::fmt::Debug for ImageSource<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for ImageSource<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             ImageSource::Bytes { uri, .. } | ImageSource::Uri(uri) => uri.as_ref().fmt(f),
             ImageSource::Texture(st) => st.id.fmt(f),

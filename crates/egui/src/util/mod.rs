@@ -1,5 +1,6 @@
 //! Miscellaneous tools used by the rest of egui.
 
+use crate::prelude::*;
 pub(crate) mod fixed_cache;
 pub mod id_type_map;
 pub mod undoer;

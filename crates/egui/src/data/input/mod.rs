@@ -1,5 +1,6 @@
 //! The input needed by egui.
 
+use crate::prelude::*;
 mod dropped_file;
 mod event;
 mod event_filter;

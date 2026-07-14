@@ -1,11 +1,8 @@
-use std::{
-    borrow::Cow,
-    collections::BTreeMap,
-    sync::{
-        Arc,
-        atomic::{AtomicUsize, Ordering},
-    },
-};
+use crate::prelude::*;
+use alloc::borrow::Cow;
+use alloc::collections::BTreeMap;
+use alloc::sync::Arc;
+use core::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::{
     TextureAtlas,
@@ -60,9 +57,9 @@ impl FontId {
     }
 }
 
-impl std::hash::Hash for FontId {
+impl core::hash::Hash for FontId {
     #[inline(always)]
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         let Self { size, family } = self;
         emath::OrderedFloat(*size).hash(state);
         family.hash(state);
@@ -100,8 +97,8 @@ pub enum FontFamily {
     Name(Arc<str>),
 }
 
-impl std::fmt::Display for FontFamily {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for FontFamily {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::Monospace => "Monospace".fmt(f),
             Self::Proportional => "Proportional".fmt(f),
@@ -415,7 +412,7 @@ fn blob_from_font_data(data: &FontData) -> Blob {
 ///
 /// // Install my own font (maybe supporting non-latin characters):
 /// fonts.font_data.insert("my_font".to_owned(),
-///    std::sync::Arc::new(
+///    alloc::sync::Arc::new(
 ///        // .ttf and .otf supported
 ///        FontData::from_static(include_bytes!("../../../epaint_default_fonts/fonts/Ubuntu-Light.ttf"))
 ///    )
@@ -632,13 +629,13 @@ pub(super) struct CachedFamily {
     ///
     /// Location-independent (fallback choice depends only on charmap support,
     /// not on variation coordinates).
-    pub face_cache: ahash::HashMap<char, FontFaceKey>,
+    pub face_cache: hashbrown::HashMap<char, FontFaceKey>,
 }
 
 impl CachedFamily {
     fn new(
         fonts: Vec<FontFaceKey>,
-        fonts_by_id: &mut nohash_hasher::IntMap<FontFaceKey, FontFace>,
+        fonts_by_id: &mut hashbrown::HashMap<FontFaceKey, FontFace, nohash_hasher::BuildNoHashHasher<FontFaceKey>>,
     ) -> Self {
         const PRIMARY_REPLACEMENT_CHAR: char = '◻'; // white medium square
         const FALLBACK_REPLACEMENT_CHAR: char = '?'; // fallback for the fallback
@@ -687,7 +684,7 @@ impl CachedFamily {
     pub(crate) fn find_face_for_char(
         &self,
         c: char,
-        fonts_by_id: &mut nohash_hasher::IntMap<FontFaceKey, FontFace>,
+        fonts_by_id: &mut hashbrown::HashMap<FontFaceKey, FontFace, nohash_hasher::BuildNoHashHasher<FontFaceKey>>,
     ) -> Option<FontFaceKey> {
         for font_key in &self.fonts {
             let font_face = fonts_by_id.get_mut(font_key).expect("Nonexistent font ID");
@@ -966,9 +963,9 @@ impl FontsView<'_> {
 pub struct FontsImpl {
     definitions: FontDefinitions,
     atlas: TextureAtlas,
-    fonts_by_id: nohash_hasher::IntMap<FontFaceKey, FontFace>,
-    fonts_by_name: ahash::HashMap<String, FontFaceKey>,
-    family_cache: ahash::HashMap<FontFamily, CachedFamily>,
+    fonts_by_id: hashbrown::HashMap<FontFaceKey, FontFace, nohash_hasher::BuildNoHashHasher<FontFaceKey>>,
+    fonts_by_name: hashbrown::HashMap<String, FontFaceKey>,
+    family_cache: hashbrown::HashMap<FontFamily, CachedFamily>,
 
     /// Recycled `harfrust` shaping buffer to avoid per-layout allocations.
     shape_buffer: Option<harfrust::UnicodeBuffer>,
@@ -982,8 +979,8 @@ impl FontsImpl {
         let initial_height = 32; // Keep initial font atlas small, so it is fast to upload to GPU. This will expand as needed anyways.
         let atlas = TextureAtlas::new([texture_width, initial_height], options);
 
-        let mut fonts_by_id: nohash_hasher::IntMap<FontFaceKey, FontFace> = Default::default();
-        let mut fonts_by_name: ahash::HashMap<String, FontFaceKey> = Default::default();
+        let mut fonts_by_id: hashbrown::HashMap<FontFaceKey, FontFace, nohash_hasher::BuildNoHashHasher<FontFaceKey>> = Default::default();
+        let mut fonts_by_name: hashbrown::HashMap<String, FontFaceKey> = Default::default();
         for (name, font_data) in &definitions.font_data {
             let blob = blob_from_font_data(font_data);
             let font_face = FontFace::new(
@@ -1068,7 +1065,7 @@ struct CachedGalley {
 struct GalleyCache {
     /// Frame counter used to do garbage collection on the cache
     generation: u32,
-    cache: nohash_hasher::IntMap<u64, CachedGalley>,
+    cache: hashbrown::HashMap<u64, CachedGalley, nohash_hasher::BuildNoHashHasher<u64>>,
 }
 
 impl GalleyCache {
@@ -1107,7 +1104,7 @@ impl GalleyCache {
         let hash = crate::util::hash((&job, OrderedFloat(pixels_per_point))); // TODO(emilk): even faster hasher?
 
         let galley = match self.cache.entry(hash) {
-            std::collections::hash_map::Entry::Occupied(entry) => {
+            hashbrown::hash_map::Entry::Occupied(entry) => {
                 // The job was found in cache - no need to re-layout.
                 let cached = entry.into_mut();
                 cached.last_used = self.generation;
@@ -1128,7 +1125,7 @@ impl GalleyCache {
 
                 galley
             }
-            std::collections::hash_map::Entry::Vacant(entry) => {
+            hashbrown::hash_map::Entry::Vacant(entry) => {
                 let job = Arc::new(job);
                 if allow_split_paragraphs && should_cache_each_paragraph_individually(&job) {
                     let (child_galleys, child_hashes) =

@@ -1,4 +1,5 @@
 /// Implemented for all builtin numeric types
+use crate::{FloatExt32 as _, FloatExt64 as _};
 pub trait Numeric: Clone + Copy + PartialEq + PartialOrd + 'static {
     /// Is this an integer type?
     const INTEGRAL: bool;
@@ -92,9 +93,9 @@ impl_numeric_integer!(i64);
 impl_numeric_integer!(u64);
 impl_numeric_integer!(isize);
 impl_numeric_integer!(usize);
-impl_numeric_non_zero_unsigned!(std::num::NonZeroU8);
-impl_numeric_non_zero_unsigned!(std::num::NonZeroU16);
-impl_numeric_non_zero_unsigned!(std::num::NonZeroU32);
-impl_numeric_non_zero_unsigned!(std::num::NonZeroU64);
-impl_numeric_non_zero_unsigned!(std::num::NonZeroU128);
-impl_numeric_non_zero_unsigned!(std::num::NonZeroUsize);
+impl_numeric_non_zero_unsigned!(core::num::NonZeroU8);
+impl_numeric_non_zero_unsigned!(core::num::NonZeroU16);
+impl_numeric_non_zero_unsigned!(core::num::NonZeroU32);
+impl_numeric_non_zero_unsigned!(core::num::NonZeroU64);
+impl_numeric_non_zero_unsigned!(core::num::NonZeroU128);
+impl_numeric_non_zero_unsigned!(core::num::NonZeroUsize);

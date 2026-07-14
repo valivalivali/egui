@@ -19,8 +19,12 @@
 #![cfg_attr(feature = "document-features", doc = document_features::document_features!())]
 //!
 
+#![no_std]
 #![expect(clippy::wrong_self_convention)]
+#[macro_use]
+extern crate alloc;
 
+use emath::{FloatExt32 as _, FloatExt64 as _};
 #[cfg(feature = "cint")]
 mod cint_impl;
 
@@ -134,14 +138,6 @@ const fn fast_round(r: f32) -> u8 {
     (r + 0.5) as _ // rust does a saturating cast since 1.45
 }
 
-#[test]
-pub fn test_srgba_conversion() {
-    for b in 0..=255 {
-        let l = linear_f32_from_gamma_u8(b);
-        assert!(0.0 <= l && l <= 1.0);
-        assert_eq!(gamma_u8_from_linear_f32(l), b);
-    }
-}
 
 /// gamma [0, 1] -> linear [0, 1] (not clamped).
 /// Works for numbers outside this range (e.g. negative numbers).

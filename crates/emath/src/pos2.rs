@@ -1,4 +1,5 @@
-use std::{
+use crate::{FloatExt32 as _, FloatExt64 as _};
+use core::{
     fmt,
     ops::{Add, AddAssign, MulAssign, Sub, SubAssign},
 };
@@ -206,7 +207,7 @@ impl Pos2 {
     }
 }
 
-impl std::ops::Index<usize> for Pos2 {
+impl core::ops::Index<usize> for Pos2 {
     type Output = f32;
 
     #[inline(always)]
@@ -219,7 +220,7 @@ impl std::ops::Index<usize> for Pos2 {
     }
 }
 
-impl std::ops::IndexMut<usize> for Pos2 {
+impl core::ops::IndexMut<usize> for Pos2 {
     #[inline(always)]
     fn index_mut(&mut self, index: usize) -> &mut f32 {
         match index {

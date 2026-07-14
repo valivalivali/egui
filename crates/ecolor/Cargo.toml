@@ -29,6 +29,8 @@ default = []
 
 [dependencies]
 emath.workspace = true
+libm.workspace = true
+spin.workspace = true
 
 #! ### Optional dependencies
 

@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use epaint::{Color32, Pos2, Rect, Shape, Stroke, emath::lerp, vec2};
 
 use crate::{Response, Sense, Ui, Widget, WidgetInfo, WidgetType};
@@ -45,7 +46,7 @@ impl Spinner {
             let radius = (rect.height().min(rect.width()) / 2.0) - 2.0;
             let n_points = (radius.round() as u32).clamp(8, 128);
             let time = ui.input(|i| i.time);
-            let start_angle = time * std::f64::consts::TAU;
+            let start_angle = time * core::f64::consts::TAU;
             let end_angle = start_angle + 240f64.to_radians() * time.sin();
             let points: Vec<Pos2> = (0..n_points)
                 .map(|i| {

@@ -1,4 +1,5 @@
-use ahash::HashMap;
+use crate::prelude::*;
+use hashbrown::HashMap;
 
 use emath::TSTransform;
 
@@ -114,7 +115,7 @@ pub fn hit_test(
     // but if the pointer is at the edge of a layer, we might include widgets in
     // a layer behind it.
 
-    let mut included_layers: ahash::HashSet<LayerId> = Default::default();
+    let mut included_layers: hashbrown::HashSet<LayerId> = Default::default();
     for hit in close.iter().rev() {
         included_layers.insert(hit.layer_id);
         let hit_covers_search_area = contains_circle(hit.interact_rect, pos, search_radius);

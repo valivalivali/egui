@@ -2,6 +2,7 @@
 ///
 /// egui usually uses logical keys, i.e. after applying any user keymap.\
 // See comment at the end of `Key { … }` on how to add new keys.
+use crate::prelude::*;
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub enum Key {

@@ -1,6 +1,7 @@
+use crate::prelude::*;
 use crate::{Atom, AtomKind, Image, WidgetText};
-use std::borrow::Cow;
-use std::ops::{Deref, DerefMut};
+use alloc::borrow::Cow;
+use core::ops::{Deref, DerefMut};
 
 /// A list of [`Atom`]s.
 ///
@@ -41,7 +42,7 @@ impl<'a> Atoms<'a> {
     ///
     /// If you have weird lifetime issues with this, use [`Self::push_left`] in a loop instead.
     pub fn extend_left(&mut self, mut atoms: Self) {
-        std::mem::swap(&mut atoms.0, &mut self.0);
+        core::mem::swap(&mut atoms.0, &mut self.0);
         self.0.extend(atoms.0);
     }
 
@@ -128,7 +129,7 @@ impl<'a> Atoms<'a> {
 
     pub fn map_atoms(&mut self, mut f: impl FnMut(Atom<'a>) -> Atom<'a>) {
         self.iter_mut()
-            .for_each(|atom| *atom = f(std::mem::take(atom)));
+            .for_each(|atom| *atom = f(core::mem::take(atom)));
     }
 
     pub fn map_kind<F>(&mut self, mut f: F)
@@ -136,7 +137,7 @@ impl<'a> Atoms<'a> {
         F: FnMut(AtomKind<'a>) -> AtomKind<'a>,
     {
         for kind in self.iter_kinds_mut() {
-            *kind = f(std::mem::take(kind));
+            *kind = f(core::mem::take(kind));
         }
     }
 
@@ -169,7 +170,7 @@ impl<'a> Atoms<'a> {
 
 impl<'a> IntoIterator for Atoms<'a> {
     type Item = Atom<'a>;
-    type IntoIter = std::vec::IntoIter<Atom<'a>>;
+    type IntoIter = alloc::vec::IntoIter<Atom<'a>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()

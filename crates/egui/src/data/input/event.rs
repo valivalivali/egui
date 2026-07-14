@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use epaint::ColorImage;
 
 use crate::{
@@ -181,6 +182,6 @@ pub enum Event {
         /// Whatever was passed to [`crate::ViewportCommand::Screenshot`].
         user_data: crate::UserData,
 
-        image: std::sync::Arc<ColorImage>,
+        image: alloc::sync::Arc<ColorImage>,
     },
 }

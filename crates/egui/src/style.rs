@@ -1,11 +1,14 @@
 //! egui theme (spacing, colors, etc).
 
+use crate::prelude::*;
 use emath::Align;
 use epaint::{
     CornerRadius, FontColorTransferFunction, Shadow, Stroke, TextOptions,
     text::{FontTweak, FontVariationAxis, HintingTarget, SmoothHinting},
 };
-use std::{collections::BTreeMap, ops::RangeInclusive, sync::Arc};
+use alloc::collections::BTreeMap;
+use core::ops::RangeInclusive;
+use alloc::sync::Arc;
 
 use crate::{
     ComboBox, CursorIcon, FontFamily, FontId, Grid, Margin, Response, RichText, TextWrapMode,
@@ -47,8 +50,8 @@ impl NumberFormatter {
     }
 }
 
-impl std::fmt::Debug for NumberFormatter {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for NumberFormatter {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str("NumberFormatter")
     }
 }
@@ -90,11 +93,11 @@ pub enum TextStyle {
     /// ```
     /// egui::TextStyle::Name("footing".into());
     /// ````
-    Name(std::sync::Arc<str>),
+    Name(alloc::sync::Arc<str>),
 }
 
-impl std::fmt::Display for TextStyle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for TextStyle {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::Small => "Small".fmt(f),
             Self::Body => "Body".fmt(f),
@@ -192,8 +195,8 @@ impl From<TextStyle> for FontSelection {
 #[derive(Clone, Default)]
 pub struct StyleModifier(Option<Arc<dyn Fn(&mut Style) + Send + Sync>>);
 
-impl std::fmt::Debug for StyleModifier {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for StyleModifier {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.write_str("StyleModifier")
     }
 }
@@ -269,7 +272,7 @@ pub struct Style {
     /// use egui::FontFamily::Proportional;
     /// use egui::FontId;
     /// use egui::TextStyle::*;
-    /// use std::collections::BTreeMap;
+    /// use alloc::collections::BTreeMap;
     ///
     /// // Redefine text_styles
     /// let text_styles: BTreeMap<_, _> = [
@@ -2684,7 +2687,7 @@ impl DebugOptions {
 }
 
 // TODO(emilk): improve and standardize
-fn two_drag_values(value: &mut Vec2, range: std::ops::RangeInclusive<f32>) -> impl Widget + '_ {
+fn two_drag_values(value: &mut Vec2, range: core::ops::RangeInclusive<f32>) -> impl Widget + '_ {
     move |ui: &mut crate::Ui| {
         ui.horizontal(|ui| {
             ui.add(
@@ -2753,8 +2756,8 @@ impl NumericColorSpace {
     }
 }
 
-impl std::fmt::Display for NumericColorSpace {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for NumericColorSpace {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::GammaByte => write!(f, "U8"),
             Self::Linear => write!(f, "F"),

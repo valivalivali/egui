@@ -1,10 +1,12 @@
+use crate::prelude::*;
 use crate::{
     Atom, AtomExt as _, AtomKind, Atoms, Button, CursorIcon, Id, IntoAtoms, Key, MINUS_CHAR_STR,
     Modifiers, NumExt as _, Response, RichText, Sense, TextEdit, TextWrapMode, Ui, Widget,
     WidgetInfo, emath, text,
 };
 use emath::Vec2;
-use std::{cmp::Ordering, ops::RangeInclusive};
+use core::cmp::Ordering;
+use core::ops::RangeInclusive;
 
 // ----------------------------------------------------------------------------
 
@@ -780,7 +782,7 @@ mod tests {
     macro_rules! total_assert_eq {
         ($a:expr, $b:expr) => {
             assert!(
-                matches!($a.total_cmp(&$b), std::cmp::Ordering::Equal),
+                matches!($a.total_cmp(&$b), core::cmp::Ordering::Equal),
                 "{} != {}",
                 $a,
                 $b

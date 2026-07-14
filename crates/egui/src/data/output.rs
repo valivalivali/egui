@@ -1,6 +1,7 @@
 //! All the data egui returns to the backend at the end of each frame.
 
-use std::ops::Range;
+use crate::prelude::*;
+use core::ops::Range;
 
 use epaint::text::CharIndex;
 
@@ -42,7 +43,7 @@ pub struct FullOutput {
 impl FullOutput {
     /// Add on new output.
     pub fn append(&mut self, newer: Self) {
-        use std::collections::btree_map::Entry;
+        use alloc::collections::btree_map::Entry;
 
         let Self {
             platform_output,
@@ -217,7 +218,7 @@ impl PlatformOutput {
     /// Take everything ephemeral (everything except `cursor_icon` and
     /// `cursor_image` currently)
     pub fn take(&mut self) -> Self {
-        let taken = std::mem::take(self);
+        let taken = core::mem::take(self);
         self.cursor_icon = taken.cursor_icon; // sticky between frames
         self.cursor_image = taken.cursor_image.clone(); // sticky between frames
         taken
@@ -297,13 +298,13 @@ pub enum UserAttentionType {
 /// the OS every frame.
 #[derive(Clone, PartialEq, Eq)]
 pub struct CustomCursorImage {
-    pub rgba: std::sync::Arc<[u8]>,
+    pub rgba: alloc::sync::Arc<[u8]>,
     pub size: [u16; 2],
     pub hotspot: [u16; 2],
 }
 
-impl std::fmt::Debug for CustomCursorImage {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for CustomCursorImage {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("CustomCursorImage")
             .field("size", &self.size)
             .field("hotspot", &self.hotspot)
@@ -519,8 +520,8 @@ impl OutputEvent {
     }
 }
 
-impl std::fmt::Debug for OutputEvent {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for OutputEvent {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::Clicked(wi) => write!(f, "Clicked({wi:?})"),
             Self::DoubleClicked(wi) => write!(f, "DoubleClicked({wi:?})"),
@@ -566,8 +567,8 @@ pub struct WidgetInfo {
     pub hint_text: Option<String>,
 }
 
-impl std::fmt::Debug for WidgetInfo {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for WidgetInfo {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let Self {
             typ,
             enabled,

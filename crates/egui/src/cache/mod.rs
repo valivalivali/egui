@@ -10,6 +10,7 @@
 //! You can access egui's caches via [`crate::Memory::caches`],
 //! found with [`crate::Context::memory_mut`].
 
+use crate::prelude::*;
 mod cache_storage;
 mod cache_trait;
 mod frame_cache;

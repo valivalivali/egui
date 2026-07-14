@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use crate::{Color32, TextureId, WHITE_UV, emath};
 use emath::{Pos2, Rect, Rot2, TSTransform, Vec2};
 
@@ -90,9 +91,9 @@ impl Mesh {
 
     /// Returns the amount of memory used by the vertices and indices.
     pub fn bytes_used(&self) -> usize {
-        std::mem::size_of::<Self>()
-            + self.vertices.len() * std::mem::size_of::<Vertex>()
-            + self.indices.len() * std::mem::size_of::<u32>()
+        core::mem::size_of::<Self>()
+            + self.vertices.len() * core::mem::size_of::<Vertex>()
+            + self.indices.len() * core::mem::size_of::<u32>()
     }
 
     /// Are all indices within the bounds of the contained vertices?

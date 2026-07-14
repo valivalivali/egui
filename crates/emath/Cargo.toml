@@ -28,6 +28,8 @@ default = []
 
 
 [dependencies]
+libm.workspace = true
+
 #! ### Optional dependencies
 
 ## [`bytemuck`](https://docs.rs/bytemuck) enables you to cast `emath` types to `&[u8]`.

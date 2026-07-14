@@ -20,8 +20,23 @@
 #![cfg_attr(feature = "document-features", doc = document_features::document_features!())]
 //!
 
+#![no_std]
 #![expect(clippy::float_cmp)]
 #![expect(clippy::manual_range_contains)]
+#[macro_use]
+extern crate alloc;
+
+pub mod prelude {
+    pub use alloc::format;
+    pub use alloc::string::{String, ToString};
+    pub use alloc::vec::Vec;
+    pub use alloc::boxed::Box;
+    pub use alloc::collections::VecDeque;
+    pub use alloc::sync::Arc;
+    pub use alloc::borrow::ToOwned;
+    pub use hashbrown::{HashMap, HashSet};
+    pub use emath::{FloatExt32 as _, FloatExt64 as _};
+}
 
 mod brush;
 pub mod color;

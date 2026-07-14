@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use crate::emath::{Rect, Vec2};
 
 /// An input event from the backend into egui, about a specific [viewport](crate::viewport).
@@ -117,7 +118,7 @@ impl ViewportInfo {
         Self {
             parent: self.parent,
             title: self.title.clone(),
-            events: std::mem::take(&mut self.events),
+            events: core::mem::take(&mut self.events),
             native_pixels_per_point: self.native_pixels_per_point,
             monitor_size: self.monitor_size,
             inner_rect: self.inner_rect,
@@ -209,7 +210,7 @@ impl ViewportInfo {
             }
 
             #[expect(clippy::ref_option)]
-            fn opt_as_str<T: std::fmt::Debug>(v: &Option<T>) -> String {
+            fn opt_as_str<T: core::fmt::Debug>(v: &Option<T>) -> String {
                 v.as_ref().map_or(String::new(), |v| format!("{v:?}"))
             }
         });

@@ -1,6 +1,7 @@
 //! Handles paint layers, i.e. how things
 //! are sometimes painted behind or in front of other things.
 
+use crate::prelude::*;
 use crate::{Id, IdMap, Rect, epaint};
 use epaint::{ClippedShape, Shape, emath::TSTransform};
 
@@ -96,8 +97,8 @@ impl LayerId {
     }
 }
 
-impl std::fmt::Debug for LayerId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for LayerId {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let Self { order, id } = self;
         write!(f, "LayerId {{ {order:?} {id:?} }}")
     }
@@ -213,7 +214,7 @@ impl GraphicLayers {
     pub fn drain(
         &mut self,
         area_order: &[LayerId],
-        to_global: &ahash::HashMap<LayerId, TSTransform>,
+        to_global: &hashbrown::HashMap<LayerId, TSTransform>,
     ) -> Vec<ClippedShape> {
         profiling::function_scope!();
 

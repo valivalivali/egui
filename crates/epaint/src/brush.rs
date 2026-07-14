@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use crate::{Rect, TextureId};
 
 /// Controls texturing of a [`crate::RectShape`].

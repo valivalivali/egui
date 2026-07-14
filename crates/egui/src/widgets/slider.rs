@@ -1,6 +1,7 @@
 #![expect(clippy::needless_pass_by_value)] // False positives with `impl ToString`
 
-use std::ops::RangeInclusive;
+use crate::prelude::*;
+use core::ops::RangeInclusive;
 
 use crate::{
     Color32, DragValue, EventFilter, Key, Label, MINUS_CHAR_STR, NumExt as _, Pos2, Rangef, Rect,

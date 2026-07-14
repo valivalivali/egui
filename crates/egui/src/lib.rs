@@ -15,6 +15,8 @@
 //! ## Feature flags
 #![cfg_attr(feature = "document-features", doc = document_features::document_features!())]
 //!
+
+//!
 //!
 //! # Using egui
 //!
@@ -388,6 +390,23 @@
 #![expect(clippy::float_cmp)]
 #![expect(clippy::manual_range_contains)]
 
+#![no_std]
+#[macro_use]
+extern crate alloc;
+
+pub mod prelude {
+    pub use alloc::format;
+    pub use alloc::string::{String, ToString};
+    pub use alloc::vec::Vec;
+    pub use alloc::boxed::Box;
+    pub use alloc::collections::VecDeque;
+    pub use alloc::sync::Arc;
+    pub use alloc::borrow::ToOwned;
+    pub use hashbrown::{HashMap, HashSet};
+    pub use emath::{FloatExt32 as _, FloatExt64 as _};
+}
+
+
 mod animation_manager;
 mod atomics;
 pub mod cache;
@@ -535,7 +554,7 @@ pub fn warn_if_debug_build(ui: &mut crate::Ui) {
 macro_rules! include_image {
     ($path:expr $(,)?) => {
         $crate::ImageSource::Bytes {
-            uri: ::std::borrow::Cow::Borrowed(concat!("bytes://", $path)),
+            uri: ::alloc::borrow::Cow::Borrowed(concat!("bytes://", $path)),
             bytes: $crate::load::Bytes::Static(include_bytes!($path)),
         }
     };

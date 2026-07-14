@@ -1,4 +1,5 @@
-use ahash::HashMap;
+use crate::prelude::*;
+use hashbrown::HashMap;
 
 use crate::{Align, Id, IdMap, LayerId, Rangef, Rect, Vec2, WidgetRects, id::IdSet, style};
 

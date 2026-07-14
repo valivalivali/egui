@@ -71,16 +71,24 @@ ecolor.workspace = true
 ahash.workspace = true
 font-types.workspace = true
 harfrust.workspace = true
+hashbrown.workspace = true
 log.workspace = true
 nohash-hasher.workspace = true
-parking_lot.workspace = true # Using parking_lot over std::sync::Mutex gives 50% speedups in some real-world scenarios.
 profiling.workspace = true
 self_cell.workspace = true
 skrifa.workspace = true
 smallvec.workspace = true
+spin.workspace = true
 unicode-general-category.workspace = true
 unicode-segmentation.workspace = true
 vello_cpu.workspace = true
+# Direct deps for feature unification (libm)
+color.workspace = true
+fearless_simd_02.workspace = true
+fearless_simd_03.workspace = true
+kurbo.workspace = true
+read-fonts.workspace = true
+vello_common.workspace = true
 
 #! ### Optional dependencies
 bytemuck = { workspace = true, optional = true, features = ["derive"] }

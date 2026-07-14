@@ -1,6 +1,10 @@
 #![warn(missing_docs)] // Let's keep `Context` well-documented.
 
-use std::{borrow::Cow, cell::RefCell, panic::Location, sync::Arc, time::Duration};
+use crate::prelude::*;
+use alloc::borrow::Cow;
+use core::panic::Location;
+use alloc::sync::Arc;
+use core::time::Duration;
 
 use emath::GuiRounding as _;
 use epaint::{
@@ -62,9 +66,16 @@ pub struct RequestRepaintInfo {
 
 // ----------------------------------------------------------------------------
 
-thread_local! {
-    static IMMEDIATE_VIEWPORT_RENDERER: RefCell<Option<Box<ImmediateViewportRendererCallback>>> = Default::default();
+struct UnsafeCell<T>(core::cell::UnsafeCell<T>);
+unsafe impl<T> Sync for UnsafeCell<T> {}
+impl<T> UnsafeCell<T> {
+    const fn new(v: T) -> Self { Self(core::cell::UnsafeCell::new(v)) }
+    #[allow(clippy::mut_from_ref)]
+    unsafe fn get(&self) -> &T { &*self.0.get() }
+    unsafe fn get_mut(&self) -> &mut T { &mut *self.0.get() }
 }
+
+static IMMEDIATE_VIEWPORT_RENDERER: UnsafeCell<Option<Box<ImmediateViewportRendererCallback>>> = UnsafeCell::new(None);
 
 // ----------------------------------------------------------------------------
 
@@ -98,7 +109,7 @@ impl ContextImpl {
     fn begin_pass_repaint_logic(&mut self, viewport_id: ViewportId) {
         let viewport = self.viewports.entry(viewport_id).or_default();
 
-        std::mem::swap(
+        core::mem::swap(
             &mut viewport.repaint.prev_causes,
             &mut viewport.repaint.causes,
         );
@@ -258,14 +269,14 @@ pub struct RepaintCause {
     pub reason: Cow<'static, str>,
 }
 
-impl std::fmt::Debug for RepaintCause {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for RepaintCause {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}:{} {}", self.file, self.line, self.reason)
     }
 }
 
-impl std::fmt::Display for RepaintCause {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for RepaintCause {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}:{} {}", self.file, self.line, self.reason)
     }
 }
@@ -453,7 +464,7 @@ impl ContextImpl {
 
         self.memory.begin_pass(&new_raw_input, &all_viewport_ids);
 
-        viewport.input = std::mem::take(&mut viewport.input).begin_pass(
+        viewport.input = core::mem::take(&mut viewport.input).begin_pass(
             new_raw_input,
             viewport.repaint.requested_immediate_repaint_prev_pass(),
             pixels_per_point,
@@ -588,7 +599,7 @@ impl ContextImpl {
         let state = self.viewport().this_pass.accesskit_state.as_mut()?;
         let builders = &mut state.nodes;
 
-        if let std::collections::hash_map::Entry::Vacant(entry) = builders.entry(id) {
+        if let hashbrown::hash_map::Entry::Vacant(entry) = builders.entry(id) {
             entry.insert(Default::default());
 
             /// Find the first ancestor that already has an accesskit node.
@@ -641,7 +652,7 @@ impl ContextImpl {
     }
 
     fn all_viewport_ids(&self) -> ViewportIdSet {
-        std::iter::chain(self.viewports.keys().copied(), [ViewportId::ROOT]).collect()
+        core::iter::chain(self.viewports.keys().copied(), [ViewportId::ROOT]).collect()
     }
 
     /// The current active viewport
@@ -709,13 +720,13 @@ impl ContextImpl {
 #[derive(Clone)]
 pub struct Context(Arc<RwLock<ContextImpl>>);
 
-impl std::fmt::Debug for Context {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for Context {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Context").finish_non_exhaustive()
     }
 }
 
-impl std::cmp::PartialEq for Context {
+impl core::cmp::PartialEq for Context {
     fn eq(&self, other: &Self) -> bool {
         Arc::ptr_eq(&self.0, &other.0)
     }
@@ -725,7 +736,7 @@ impl Default for Context {
     fn default() -> Self {
         let ctx_impl = ContextImpl {
             embed_viewports: true,
-            viewports: std::iter::once((ViewportId::ROOT, ViewportState::default())).collect(),
+            viewports: core::iter::once((ViewportId::ROOT, ViewportState::default())).collect(),
             ..Default::default()
         };
         let ctx = Self(Arc::new(RwLock::new(ctx_impl)));
@@ -834,7 +845,7 @@ impl Context {
             self.write(|ctx| {
                 let viewport = ctx.viewport_for(viewport_id);
                 viewport.output.num_completed_passes =
-                    std::mem::take(&mut output.platform_output.num_completed_passes);
+                    core::mem::take(&mut output.platform_output.num_completed_passes);
                 output.platform_output.request_discard_reasons.clear();
             });
 
@@ -1810,7 +1821,7 @@ impl Context {
     /// See [`Self::request_repaint_after`] for details.
     #[track_caller]
     pub fn request_repaint_after_secs(&self, seconds: f32) {
-        if let Ok(duration) = std::time::Duration::try_from_secs_f32(seconds) {
+        if let Ok(duration) = core::time::Duration::try_from_secs_f32(seconds) {
             self.request_repaint_after(duration);
         }
     }
@@ -1993,7 +2004,7 @@ impl Context {
         &self,
         f: impl FnOnce(&mut T) -> R,
     ) -> Option<R> {
-        let plugin = self.read(|ctx| ctx.plugins.get(std::any::TypeId::of::<T>()));
+        let plugin = self.read(|ctx| ctx.plugins.get(core::any::TypeId::of::<T>()));
         plugin.map(|plugin| f(plugin.lock().typed_plugin_mut()))
     }
 
@@ -2005,13 +2016,13 @@ impl Context {
         if let Some(plugin) = self.plugin_opt() {
             plugin
         } else {
-            panic!("Plugin of type {:?} not found", std::any::type_name::<T>());
+            panic!("Plugin of type {:?} not found", core::any::type_name::<T>());
         }
     }
 
     /// Get a handle to the plugin of type `T`, if it was registered.
     pub fn plugin_opt<T: plugin::Plugin>(&self) -> Option<TypedPluginHandle<T>> {
-        let plugin = self.read(|ctx| ctx.plugins.get(std::any::TypeId::of::<T>()));
+        let plugin = self.read(|ctx| ctx.plugins.get(core::any::TypeId::of::<T>()));
         plugin.map(TypedPluginHandle::new)
     }
 
@@ -2400,7 +2411,7 @@ impl Context {
     #[cfg(debug_assertions)]
     fn debug_painting(&self) {
         #![expect(clippy::iter_over_hash_type)] // ok to be sloppy in debug painting
-        use std::fmt::Write as _;
+        use core::fmt::Write as _;
 
         let paint_widget = |widget: &WidgetRect, text: &str, color: Color32| {
             let rect = widget.interact_rect;
@@ -2581,7 +2592,7 @@ impl ContextImpl {
         // Inform the backend of all textures that have been updated (including font atlas).
         let textures_delta = self.tex_manager.0.write().take_delta();
 
-        let mut platform_output: PlatformOutput = std::mem::take(&mut viewport.output);
+        let mut platform_output: PlatformOutput = core::mem::take(&mut viewport.output);
 
         if self.memory.should_interrupt_ime()
             && let Some(ime) = &mut platform_output.ime
@@ -2641,7 +2652,7 @@ impl ContextImpl {
             shapes
         };
 
-        std::mem::swap(&mut viewport.prev_pass, &mut viewport.this_pass);
+        core::mem::swap(&mut viewport.prev_pass, &mut viewport.this_pass);
 
         if repaint_needed {
             self.request_repaint(ended_viewport_id, RepaintCause::new());
@@ -2703,7 +2714,7 @@ impl ContextImpl {
                     // Let the primary immediate viewport handle the commands of its children too.
                     // This can make things easier for the backend, as otherwise we may get commands
                     // that affect a viewport while its egui logic is running.
-                    std::mem::take(&mut viewport.commands)
+                    core::mem::take(&mut viewport.commands)
                 } else {
                     vec![]
                 };
@@ -3887,9 +3898,9 @@ impl Context {
         callback: impl for<'a> Fn(&Self, ImmediateViewport<'a>) + 'static,
     ) {
         let callback = Box::new(callback);
-        IMMEDIATE_VIEWPORT_RENDERER.with(|render_sync| {
-            render_sync.replace(Some(callback));
-        });
+        { let render_sync = unsafe { IMMEDIATE_VIEWPORT_RENDERER.get_mut() };
+            *render_sync = Some(callback as Box<dyn for<'a> Fn(&Self, ImmediateViewport<'a>) + 'static>);
+        }
     }
 
     /// If `true`, [`Self::show_viewport_deferred`] and [`Self::show_viewport_immediate`] will
@@ -4025,8 +4036,8 @@ impl Context {
             });
         }
 
-        IMMEDIATE_VIEWPORT_RENDERER.with(|immediate_viewport_renderer| {
-            let immediate_viewport_renderer = immediate_viewport_renderer.borrow();
+        { let immediate_viewport_renderer = unsafe { IMMEDIATE_VIEWPORT_RENDERER.get_mut() };
+            // immediate_viewport_renderer is already a &mut Option<...>
             let Some(immediate_viewport_renderer) = immediate_viewport_renderer.as_ref() else {
                 // This egui backend does not support multiple viewports.
                 return self.show_embedded_viewport(new_viewport_id, builder, |ui| {
@@ -4066,7 +4077,7 @@ impl Context {
             out.expect(
                 "egui backend is implemented incorrectly - the user callback was never called",
             )
-        })
+        }
     }
 
     fn show_embedded_viewport<T>(
@@ -4181,20 +4192,20 @@ fn warn_if_rect_changes_id(
 ) {
     profiling::function_scope!();
 
-    use std::collections::BTreeMap;
+    use alloc::collections::BTreeMap;
 
     /// A wrapper around [`Rect`] that implements [`Ord`] using the bit representation of its floats.
     #[derive(Clone, Copy, PartialEq, Eq)]
     struct OrderedRect(Rect);
 
     impl PartialOrd for OrderedRect {
-        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
             Some(self.cmp(other))
         }
     }
 
     impl Ord for OrderedRect {
-        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        fn cmp(&self, other: &Self) -> core::cmp::Ordering {
             let lhs = self.0;
             let rhs = other.0;
             lhs.min

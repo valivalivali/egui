@@ -1,4 +1,5 @@
-use std::sync::Arc;
+use crate::prelude::*;
+use alloc::sync::Arc;
 
 use crate::{
     Align, Direction, FontSelection, Galley, Pos2, Response, Sense, Stroke, TextWrapMode, Ui,

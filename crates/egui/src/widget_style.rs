@@ -1,4 +1,6 @@
-use std::{borrow::Cow, fmt};
+use crate::prelude::*;
+use alloc::borrow::Cow;
+use core::fmt;
 
 use emath::Vec2;
 use epaint::{Color32, FontId, Shadow, Stroke, text::TextWrapMode};
@@ -256,7 +258,7 @@ impl HasClasses for Classes {
     }
 }
 
-impl std::fmt::Display for Classes {
+impl core::fmt::Display for Classes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.classes.iter().for_each(|class| {
             let _ = f.write_str(class.as_str());

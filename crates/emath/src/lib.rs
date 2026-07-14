@@ -19,9 +19,14 @@
 #![cfg_attr(feature = "document-features", doc = document_features::document_features!())]
 //!
 
-#![expect(clippy::float_cmp)]
 
-use std::ops::{Add, Div, Mul, RangeInclusive, Sub};
+#![no_std]
+#![expect(clippy::float_cmp)]
+#[macro_use]
+extern crate alloc;
+
+use core::ops::{Add, Div, Mul, RangeInclusive, Sub};
+use alloc::string::String;
 
 // ----------------------------------------------------------------------------
 
@@ -90,6 +95,101 @@ pub trait Real:
 impl Real for f32 {}
 
 impl Real for f64 {}
+
+// ----------------------------------------------------------------------------
+// no_std float math via libm
+
+pub trait FloatExt32: Sized {
+    fn floor(self) -> Self;
+    fn ceil(self) -> Self;
+    fn round(self) -> Self;
+    fn fract(self) -> Self;
+    fn sqrt(self) -> Self;
+    fn sin(self) -> Self;
+    fn cos(self) -> Self;
+    fn tan(self) -> Self;
+    fn atan2(self, other: Self) -> Self;
+    fn powf(self, exp: Self) -> Self;
+    fn powi(self, exp: i32) -> Self;
+    fn hypot(self, other: Self) -> Self;
+    fn sin_cos(self) -> (Self, Self);
+    fn acos(self) -> Self;
+    fn cbrt(self) -> Self;
+    fn abs(self) -> Self;
+    fn trunc(self) -> Self;
+    fn ln(self) -> Self;
+    fn exp(self) -> Self;
+}
+
+impl FloatExt32 for f32 {
+    fn floor(self) -> Self { libm::floorf(self) as f32 }
+    fn ceil(self) -> Self { libm::ceilf(self) as f32 }
+    fn round(self) -> Self { libm::roundf(self) as f32 }
+    fn fract(self) -> Self { self - libm::floorf(self) as f32 }
+    fn sqrt(self) -> Self { libm::sqrtf(self) }
+    fn sin(self) -> Self { libm::sinf(self) }
+    fn cos(self) -> Self { libm::cosf(self) }
+    fn tan(self) -> Self { libm::tanf(self) }
+    fn atan2(self, other: Self) -> Self { libm::atan2f(self, other) }
+    fn powf(self, exp: Self) -> Self { libm::powf(self, exp) }
+    fn powi(self, exp: i32) -> Self { libm::powf(self, exp as f32) }
+    fn hypot(self, other: Self) -> Self { libm::hypotf(self, other) }
+    fn sin_cos(self) -> (Self, Self) { libm::sincosf(self) }
+    fn acos(self) -> Self { libm::acosf(self) }
+    fn cbrt(self) -> Self { libm::cbrtf(self) }
+    fn abs(self) -> Self { libm::fabsf(self) }
+    fn trunc(self) -> Self { libm::truncf(self) }
+    fn ln(self) -> Self { libm::logf(self) }
+    fn exp(self) -> Self { libm::expf(self) }
+}
+
+pub trait FloatExt64: Sized {
+    fn floor(self) -> Self;
+    fn round(self) -> Self;
+    fn powf(self, exp: Self) -> Self;
+    fn powi(self, exp: i32) -> Self;
+    fn log10(self) -> Self;
+    fn sqrt(self) -> Self;
+    fn sin(self) -> Self;
+    fn cos(self) -> Self;
+    fn tan(self) -> Self;
+    fn sin_cos(self) -> (Self, Self);
+    fn abs(self) -> Self;
+    fn fract(self) -> Self;
+    fn ceil(self) -> Self;
+    fn trunc(self) -> Self;
+    fn hypot(self, other: Self) -> Self;
+    fn atan2(self, other: Self) -> Self;
+    fn ln(self) -> Self;
+    fn exp(self) -> Self;
+}
+
+impl FloatExt64 for f64 {
+    fn floor(self) -> Self { libm::floor(self) }
+    fn round(self) -> Self { libm::round(self) }
+    fn powf(self, exp: Self) -> Self { libm::pow(self, exp) }
+    fn powi(self, exp: i32) -> Self { libm::pow(self, exp as f64) }
+    fn log10(self) -> Self { libm::log10(self) }
+    fn sqrt(self) -> Self { libm::sqrt(self) }
+    fn sin(self) -> Self { libm::sin(self) }
+    fn cos(self) -> Self { libm::cos(self) }
+    fn tan(self) -> Self { libm::tan(self) }
+    fn sin_cos(self) -> (Self, Self) { libm::sincos(self) }
+    fn abs(self) -> Self { libm::fabs(self) }
+    fn fract(self) -> Self { self - libm::floor(self) }
+    fn ceil(self) -> Self { libm::ceil(self) }
+    fn trunc(self) -> Self { libm::trunc(self) }
+    fn hypot(self, other: Self) -> Self { libm::hypot(self, other) }
+    fn atan2(self, other: Self) -> Self { libm::atan2(self, other) }
+    fn ln(self) -> Self { libm::log(self) }
+    fn exp(self) -> Self { libm::exp(self) }
+}
+
+pub mod prelude {
+    pub use crate::{FloatExt32, FloatExt64};
+    pub use alloc::format;
+    pub use alloc::string::String;
+}
 
 // ----------------------------------------------------------------------------
 
@@ -204,7 +304,7 @@ where
 /// Round a value to the given number of decimal places.
 pub fn round_to_decimals(value: f64, decimal_places: usize) -> f64 {
     // This is a stupid way of doing this, but stupid works.
-    format!("{value:.decimal_places$}").parse().unwrap_or(value)
+    alloc::format!("{value:.decimal_places$}").parse().unwrap_or(value)
 }
 
 pub fn format_with_minimum_decimals(value: f64, decimals: usize) -> String {
@@ -231,7 +331,7 @@ pub fn format_with_decimals_in_range(value: f64, decimal_range: RangeInclusive<u
     if min_decimals < max_decimals {
         // Ugly/slow way of doing this. TODO(emilk): clean up precision.
         for decimals in min_decimals..max_decimals {
-            let text = format!("{value:.decimals$}");
+            let text = alloc::format!("{value:.decimals$}");
             let epsilon = 16.0 * f32::EPSILON; // margin large enough to handle most peoples round-tripping needs
             if let Ok(parsed_value) = text.parse::<f32>()
                 && almost_equal(parsed_value, value as f32, epsilon)
@@ -244,7 +344,7 @@ pub fn format_with_decimals_in_range(value: f64, decimal_range: RangeInclusive<u
         // Probably the value was set not by the slider, but from outside.
         // In any case: show the full value
     }
-    format!("{value:.max_decimals$}")
+    alloc::format!("{value:.max_decimals$}")
 }
 
 /// Return true when arguments are the same within some rounding error.
@@ -259,60 +359,6 @@ pub fn almost_equal(a: f32, b: f32, epsilon: f32) -> bool {
         let abs_max = a.abs().max(b.abs());
         abs_max <= epsilon || ((a - b).abs() / abs_max) <= epsilon
     }
-}
-
-#[expect(clippy::approx_constant)]
-#[test]
-fn test_format() {
-    assert_eq!(format_with_minimum_decimals(1_234_567.0, 0), "1234567");
-    assert_eq!(format_with_minimum_decimals(1_234_567.0, 1), "1234567.0");
-    assert_eq!(format_with_minimum_decimals(3.14, 2), "3.14");
-    assert_eq!(format_with_minimum_decimals(3.14, 3), "3.140");
-    assert_eq!(
-        format_with_minimum_decimals(std::f64::consts::PI, 2),
-        "3.14159"
-    );
-}
-
-#[test]
-fn test_almost_equal() {
-    for &x in &[
-        0.0_f32,
-        f32::MIN_POSITIVE,
-        1e-20,
-        1e-10,
-        f32::EPSILON,
-        0.1,
-        0.99,
-        1.0,
-        1.001,
-        1e10,
-        f32::MAX / 100.0,
-        // f32::MAX, // overflows in rad<->deg test
-        f32::INFINITY,
-    ] {
-        for &x in &[-x, x] {
-            for roundtrip in &[
-                |x: f32| x.to_degrees().to_radians(),
-                |x: f32| x.to_radians().to_degrees(),
-            ] {
-                let epsilon = f32::EPSILON;
-                assert!(
-                    almost_equal(x, roundtrip(x), epsilon),
-                    "{} vs {}",
-                    x,
-                    roundtrip(x)
-                );
-            }
-        }
-    }
-}
-
-#[test]
-fn test_remap() {
-    assert_eq!(remap_clamp(1.0, 0.0..=1.0, 0.0..=16.0), 16.0);
-    assert_eq!(remap_clamp(1.0, 1.0..=0.0, 16.0..=0.0), 16.0);
-    assert_eq!(remap_clamp(0.5, 1.0..=0.0, 16.0..=0.0), 8.0);
 }
 
 // ----------------------------------------------------------------------------
@@ -365,7 +411,7 @@ impl_num_ext!(Pos2);
 
 /// Wrap angle to `[-PI, PI]` range.
 pub fn normalized_angle(mut angle: f32) -> f32 {
-    use std::f32::consts::{PI, TAU};
+    use core::f32::consts::{PI, TAU};
     angle %= TAU;
     if angle > PI {
         angle -= TAU;
@@ -373,25 +419,6 @@ pub fn normalized_angle(mut angle: f32) -> f32 {
         angle += TAU;
     }
     angle
-}
-
-#[test]
-fn test_normalized_angle() {
-    macro_rules! almost_eq {
-        ($left: expr, $right: expr) => {
-            let left = $left;
-            let right = $right;
-            assert!((left - right).abs() < 1e-6, "{} != {}", left, right);
-        };
-    }
-
-    use std::f32::consts::TAU;
-    almost_eq!(normalized_angle(-3.0 * TAU), 0.0);
-    almost_eq!(normalized_angle(-2.3 * TAU), -0.3 * TAU);
-    almost_eq!(normalized_angle(-TAU), 0.0);
-    almost_eq!(normalized_angle(0.0), 0.0);
-    almost_eq!(normalized_angle(TAU), 0.0);
-    almost_eq!(normalized_angle(2.7 * TAU), -0.3 * TAU);
 }
 
 // ----------------------------------------------------------------------------

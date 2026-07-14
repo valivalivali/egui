@@ -1,4 +1,5 @@
-use std::sync::Arc;
+use crate::prelude::*;
+use alloc::sync::Arc;
 
 #[expect(unused_imports)] // Used for doclinks
 use crate::Ui;

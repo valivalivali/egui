@@ -1,6 +1,7 @@
 // TODO(emilk): have separate types `PositionId` and `UniqueId`. ?
 
-use std::num::NonZeroU64;
+use crate::prelude::*;
+use core::num::NonZeroU64;
 
 use crate::{AsIdSalt, IdSalt};
 
@@ -8,9 +9,9 @@ use crate::{AsIdSalt, IdSalt};
 ///
 /// This is all types implementing `Hash` and `Debug`,
 /// which includes things like string, integers, tuples of those, etc.
-pub trait AsId: std::hash::Hash + std::fmt::Debug {}
+pub trait AsId: core::hash::Hash + core::fmt::Debug {}
 
-impl<T: std::hash::Hash + std::fmt::Debug> AsId for T {}
+impl<T: core::hash::Hash + core::fmt::Debug> AsId for T {}
 
 /// egui tracks widgets frame-to-frame using [`Id`]s.
 ///
@@ -75,7 +76,7 @@ impl Id {
 
     /// Generate a child [`Id`] by salting the parent [`Id`] with the given argument.
     pub fn with(self, salt: impl AsIdSalt) -> Self {
-        use std::hash::{BuildHasher as _, Hasher as _};
+        use core::hash::{BuildHasher as _, Hasher as _};
         let mut hasher = ahash::RandomState::with_seeds(1, 2, 3, 4).build_hasher();
         hasher.write_u64(self.value());
         hasher.write_u64(IdSalt::new(&salt).value());
@@ -124,8 +125,8 @@ impl Id {
     }
 }
 
-impl std::fmt::Debug for Id {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for Id {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if *self == Self::NULL {
             return write!(f, "Id::NULL");
         }
@@ -157,10 +158,10 @@ impl From<String> for Id {
 // ----------------------------------------------------------------------------
 
 /// `IdSet` is a `HashSet<Id>` optimized by knowing that [`Id`] has good entropy, and doesn't need more hashing.
-pub type IdSet = nohash_hasher::IntSet<Id>;
+pub type IdSet = hashbrown::HashSet<Id, nohash_hasher::BuildNoHashHasher<Id>>;
 
 /// `IdMap<V>` is a `HashMap<Id, V>` optimized by knowing that [`Id`] has good entropy, and doesn't need more hashing.
-pub type IdMap<V> = nohash_hasher::IntMap<Id, V>;
+pub type IdMap<V> = hashbrown::HashMap<Id, V, nohash_hasher::BuildNoHashHasher<Id>>;
 
 // ----------------------------------------------------------------------------
 
@@ -172,9 +173,9 @@ pub type IdMap<V> = nohash_hasher::IntMap<Id, V>;
 mod id_source {
     use super::{AsId, AsIdSalt, Id, IdMap};
     use epaint::mutex::RwLock;
-    use std::sync::LazyLock;
+    use spin::Once;
 
-    static SOURCE_MAP: LazyLock<RwLock<IdMap<String>>> = LazyLock::new(RwLock::default);
+    static SOURCE_MAP: LazyLock<RwLock<IdMap<String>>> = spin::Once::new(RwLock::default);
 
     pub(super) fn insert_root(id: Id, source: &impl AsId) {
         if SOURCE_MAP.read().contains_key(&id) {
@@ -204,8 +205,8 @@ mod id_source {
 
 #[test]
 fn id_size() {
-    assert_eq!(std::mem::size_of::<Id>(), 8);
-    assert_eq!(std::mem::size_of::<Option<Id>>(), 8);
+    assert_eq!(core::mem::size_of::<Id>(), 8);
+    assert_eq!(core::mem::size_of::<Option<Id>>(), 8);
 }
 
 #[cfg(test)]

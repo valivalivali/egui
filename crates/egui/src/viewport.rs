@@ -69,7 +69,8 @@
 //! There are several more things related to viewports that we want to add.
 //! Read more at <https://github.com/emilk/egui/issues/3556>.
 
-use std::sync::Arc;
+use crate::prelude::*;
+use alloc::sync::Arc;
 
 use epaint::{Pos2, Vec2};
 
@@ -121,13 +122,13 @@ pub struct ViewportId(pub Id);
 // We implement `PartialOrd` and `Ord` so we can use `ViewportId` in a `BTreeMap`,
 // which allows predicatable iteration order, frame-to-frame.
 impl PartialOrd for ViewportId {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
 impl Ord for ViewportId {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
         self.0.value().cmp(&other.0.value())
     }
 }
@@ -139,8 +140,8 @@ impl Default for ViewportId {
     }
 }
 
-impl std::fmt::Debug for ViewportId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for ViewportId {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         self.0.short_debug_format().fmt(f)
     }
 }
@@ -165,13 +166,13 @@ impl From<ViewportId> for Id {
 impl nohash_hasher::IsEnabled for ViewportId {}
 
 /// A fast hash set of [`ViewportId`].
-pub type ViewportIdSet = nohash_hasher::IntSet<ViewportId>;
+pub type ViewportIdSet = hashbrown::HashSet<ViewportId, nohash_hasher::BuildNoHashHasher<ViewportId>>;
 
 /// A fast hash map from [`ViewportId`] to `T`.
-pub type ViewportIdMap<T> = nohash_hasher::IntMap<ViewportId, T>;
+pub type ViewportIdMap<T> = hashbrown::HashMap<ViewportId, T, nohash_hasher::BuildNoHashHasher<ViewportId>>;
 
 /// An order map from [`ViewportId`] to `T`.
-pub type OrderedViewportIdMap<T> = std::collections::BTreeMap<ViewportId, T>;
+pub type OrderedViewportIdMap<T> = alloc::collections::BTreeMap<ViewportId, T>;
 
 // ----------------------------------------------------------------------------
 
@@ -199,8 +200,8 @@ impl IconData {
     }
 }
 
-impl std::fmt::Debug for IconData {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for IconData {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("IconData")
             .field("width", &self.width)
             .field("height", &self.height)
@@ -1276,7 +1277,7 @@ pub struct ViewportOutput {
     /// but if you haven't, you can use this instead.
     ///
     /// If the duration is zero, schedule a repaint immediately.
-    pub repaint_delay: std::time::Duration,
+    pub repaint_delay: core::time::Duration,
 }
 
 impl ViewportOutput {

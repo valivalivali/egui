@@ -1,4 +1,5 @@
-use std::sync::Arc;
+use crate::prelude::*;
+use alloc::sync::Arc;
 
 use emath::{Rect, TSTransform};
 use epaint::text::{Galley, LayoutJob, TextWrapMode, cursor::CCursor};
@@ -977,7 +978,7 @@ impl TextEdit<'_> {
 
 fn mask_if_password(is_password: bool, text: &str) -> String {
     fn mask_password(text: &str) -> String {
-        std::iter::repeat_n(
+        core::iter::repeat_n(
             epaint::text::PASSWORD_REPLACEMENT_CHAR,
             text.chars().count(),
         )

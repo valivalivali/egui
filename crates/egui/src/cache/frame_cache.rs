@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use super::CacheTrait;
 
 /// Something that does an expensive computation that we want to cache
@@ -12,7 +13,7 @@ pub trait ComputerMut<Key, Value>: 'static + Send + Sync {
 pub struct FrameCache<Value, Computer> {
     generation: u32,
     computer: Computer,
-    cache: nohash_hasher::IntMap<u64, (u32, Value)>,
+    cache: hashbrown::HashMap<u64, (u32, Value), nohash_hasher::BuildNoHashHasher<u64>>,
 }
 
 impl<Value, Computer> Default for FrameCache<Value, Computer>
@@ -48,18 +49,18 @@ impl<Value, Computer> FrameCache<Value, Computer> {
     /// or recompute and store in the cache.
     pub fn get<Key>(&mut self, key: Key) -> &Value
     where
-        Key: Copy + std::hash::Hash,
+        Key: Copy + core::hash::Hash,
         Computer: ComputerMut<Key, Value>,
     {
         let hash = crate::util::hash(key);
 
         match self.cache.entry(hash) {
-            std::collections::hash_map::Entry::Occupied(entry) => {
+            hashbrown::hash_map::Entry::Occupied(entry) => {
                 let cached = entry.into_mut();
                 cached.0 = self.generation;
                 &cached.1
             }
-            std::collections::hash_map::Entry::Vacant(entry) => {
+            hashbrown::hash_map::Entry::Vacant(entry) => {
                 let value = self.computer.compute(key);
                 let inserted = entry.insert((self.generation, value));
                 &inserted.1

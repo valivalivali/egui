@@ -2,6 +2,7 @@
 //!
 //! For instance, a [`Frame`] adds a frame and background to some contained UI.
 
+use crate::prelude::*;
 pub(crate) mod area;
 mod close_tag;
 pub mod collapsing_header;

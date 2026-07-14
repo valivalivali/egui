@@ -1,7 +1,8 @@
+use crate::prelude::*;
 use crate::{Image, SizedAtomLayout};
 use emath::Vec2;
 use epaint::Galley;
-use std::sync::Arc;
+use alloc::sync::Arc;
 
 /// A sized [`crate::AtomKind`].
 #[derive(Clone, Debug)]

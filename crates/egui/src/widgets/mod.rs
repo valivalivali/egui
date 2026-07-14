@@ -4,6 +4,7 @@
 //! * `ui.add(Label::new("Text").text_color(color::red));`
 //! * `if ui.add(Button::new("Click me")).clicked() { … }`
 
+use crate::prelude::*;
 use crate::{Response, Ui};
 
 mod button;

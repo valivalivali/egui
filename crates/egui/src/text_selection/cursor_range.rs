@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use epaint::{Galley, text::CharIndex, text::cursor::CCursor};
 
 use crate::{Event, Id, Key, Modifiers, os::OperatingSystem};
@@ -49,9 +50,9 @@ impl CCursorRange {
     }
 
     /// The range of selected character indices.
-    pub fn as_sorted_char_range(&self) -> std::ops::Range<CharIndex> {
+    pub fn as_sorted_char_range(&self) -> core::ops::Range<CharIndex> {
         let [start, end] = self.sorted_cursors();
-        std::ops::Range {
+        core::ops::Range {
             start: start.index,
             end: end.index,
         }

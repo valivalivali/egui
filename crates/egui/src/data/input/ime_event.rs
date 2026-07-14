@@ -1,6 +1,7 @@
 /// IME event.
 ///
 /// See <https://docs.rs/winit/latest/winit/event/enum.Ime.html>
+use crate::prelude::*;
 #[derive(Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub enum ImeEvent {
@@ -14,7 +15,7 @@ pub enum ImeEvent {
     /// a non-empty preedit string indicates that the IME is active.
     Preedit {
         text: String,
-        active_range_chars: Option<std::ops::Range<usize>>,
+        active_range_chars: Option<core::ops::Range<usize>>,
     },
 
     /// IME composition ended with this final result.

@@ -1,5 +1,6 @@
 //! Everything related to text, fonts, text layout, cursors etc.
 
+use crate::prelude::*;
 pub mod cursor;
 mod font;
 mod fonts;

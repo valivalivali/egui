@@ -1,10 +1,11 @@
 #![expect(clippy::mem_forget)]
 
+use crate::prelude::*;
 use ecolor::Color32;
 use emath::{GuiRounding as _, OrderedFloat, Vec2, vec2};
 use self_cell::self_cell;
 use skrifa::{GlyphId, MetadataProvider as _};
-use std::collections::BTreeMap;
+use alloc::collections::BTreeMap;
 use vello_cpu::{color, kurbo};
 
 use crate::{
@@ -365,15 +366,15 @@ pub struct FontFace {
     ///
     /// Only depends on the font's charmap + `FontTweak`. A miss means the char
     /// is not in this face's repertoire and the fallback chain should be tried.
-    glyph_id_cache: ahash::HashMap<char, GlyphIdResolution>,
+    glyph_id_cache: hashbrown::HashMap<char, GlyphIdResolution>,
 
     /// Location-dependent: `(char, LocationHash) → unscaled advance width`.
     ///
     /// Variable fonts can vary advance widths per axis (HVAR table), so this
     /// must be re-keyed per resolved [`skrifa::instance::Location`].
-    advance_width_cache: ahash::HashMap<(char, LocationHash), OrderedFloat<f32>>,
+    advance_width_cache: hashbrown::HashMap<(char, LocationHash), OrderedFloat<f32>>,
 
-    glyph_alloc_cache: ahash::HashMap<GlyphCacheKey, GlyphAllocation>,
+    glyph_alloc_cache: hashbrown::HashMap<GlyphCacheKey, GlyphAllocation>,
 }
 
 impl FontFace {
@@ -383,7 +384,7 @@ impl FontFace {
         font_data: Blob,
         index: u32,
         tweak: FontTweak,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> Result<Self, Box<dyn core::error::Error>> {
         let font = FontCell::try_new(font_data, |font_data| {
             let skrifa_font =
                 skrifa::FontRef::from_index(AsRef::<[u8]>::as_ref(font_data.as_ref()), index)?;
@@ -415,7 +416,7 @@ impl FontFace {
                 })
                 .flatten();
 
-            Ok::<DependentFontData<'_>, Box<dyn std::error::Error>>(DependentFontData {
+            Ok::<DependentFontData<'_>, Box<dyn core::error::Error>>(DependentFontData {
                 skrifa: skrifa_font,
                 charmap,
                 outline_glyphs: glyphs,
@@ -575,7 +576,7 @@ impl FontFace {
         let axes = font_data.skrifa.axes();
         // Override the default coordinates with ones specified via FontTweak, then the ones specified directly via the
         // argument (probably from TextFormat).
-        let settings = std::iter::chain(self.tweak.coords.as_ref(), coords.as_ref());
+        let settings = core::iter::chain(self.tweak.coords.as_ref(), coords.as_ref());
         let location = axes.location(settings);
         let location_hash = LocationHash::new(&location);
 
@@ -663,7 +664,7 @@ pub(crate) struct ShapedGlyph {
 // TODO(emilk): rename?
 /// Wrapper over multiple [`FontFace`] (e.g. a primary + fallbacks for emojis)
 pub struct Font<'a> {
-    pub(super) fonts_by_id: &'a mut nohash_hasher::IntMap<FontFaceKey, FontFace>,
+    pub(super) fonts_by_id: &'a mut hashbrown::HashMap<FontFaceKey, FontFace, nohash_hasher::BuildNoHashHasher<FontFaceKey>>,
     pub(super) cached_family: &'a mut CachedFamily,
     pub(super) atlas: &'a mut TextureAtlas,
 }
