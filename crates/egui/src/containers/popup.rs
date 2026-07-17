@@ -572,6 +572,10 @@ impl<'a> Popup<'a> {
             .fixed_pos(anchor)
             .sense(sense)
             .layout(layout)
+            /* Menus/submenus must appear fully opaque immediately. Fade-in
+             * multiplies widget alpha; with a GPU overlay compositor that
+             * looks like a washed-out fly-out until the animation finishes. */
+            .fade_in(kind != PopupKind::Menu)
             .info(info.unwrap_or_else(|| {
                 UiStackInfo::new(kind.into()).with_tag_value(
                     MenuConfig::MENU_CONFIG_TAG,
